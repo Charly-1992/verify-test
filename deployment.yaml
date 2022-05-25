@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ibm-verify-app-dummy
+      app.kubernetes.io/component: ibm-verify-app-dummy
+      app.kubernetes.io/instance: ibm-verify-app-dummy
+    name: ibm-verify-app-dummy
+  spec:
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      deploymentconfig: ibm-verify-app-dummy
+    template:
+      metadata:
+        labels:
+          deploymentconfig: ibm-verify-app-dummy
+      spec:
+        containers:
+        - image: ibm-verify-app-dummy
+          imagePullPolicy: Always
+          name: ibm-verify-app-dummy
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8443
+            protocol: TCP
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ibm-verify-app-dummy
+        from:
+          kind: ImageStreamTag
+          name: ibm-verify-app-dummy:test
+      type: ImageChange
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: ibm-verify-app-dummy
+      app.kubernetes.io/component: ibm-verify-app-dummy
+      app.kubernetes.io/instance: ibm-verify-app-dummy
+    name: ibm-verify-app-dummy
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: ibm-verify-app-dummy
+      app.kubernetes.io/component: ibm-verify-app-dummy
+      app.kubernetes.io/instance: ibm-verify-app-dummy
+    name: ibm-verify-app-dummy
+  spec:
+    port:
+      targetPort: 8080-tcp
+    tls:
+      termination: edge
+    to:
+      kind: Service
+      name: ibm-verify-app-dummy
+      weight: 100
+    wildcardPolicy: None
